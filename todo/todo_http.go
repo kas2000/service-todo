@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 import command "github.com/kas2000/commandlib"
 
@@ -52,8 +53,12 @@ func (factory *TodoHttp) CreateTodo() httpLib.Endpoint {
 
 		resp, err := factory.ch.ExecuteCommand(&cmd)
 		if err != nil {
-			return httpLib.NotFound(130, err.Error(), factory.systemName) //Почему в тз написано возвращаем 404? Разве не 500 должна быть?
-			//return httpLib.InternalServer(150, err.Error(), factory.systemName)
+			switch err {
+			case ErrTodoAlreadyExists, ErrTitleLengthLimitExceeded, ErrInvalidDateFormat:
+				return httpLib.NotFound(130, err.Error(), factory.systemName) //Почему в тз написано возвращаем 404? Разве не 500 должна быть?
+			default:
+				return httpLib.InternalServer(150, err.Error(), factory.systemName)
+			}
 		}
 		return httpLib.NewResponse(http.StatusNoContent, resp, nil) //Почему в тз написано возвращаем 204?
 		//return httpLib.NewResponse(http.StatusCreated, resp, nil) Разве не 201 должна быть?
@@ -95,8 +100,10 @@ func (factory *TodoHttp) UpdateTodo(idParameter string) httpLib.Endpoint {
 			switch err {
 			case ErrTodoNotFound:
 				return httpLib.NotFound(190, err.Error(), factory.systemName)
+			case ErrTodoAlreadyExists, ErrTitleLengthLimitExceeded, ErrInvalidDateFormat:
+				return httpLib.BadRequest(200, err.Error(), factory.systemName)
 			}
-			return httpLib.InternalServer(200, err.Error(), factory.systemName)
+			return httpLib.InternalServer(210, err.Error(), factory.systemName)
 		}
 		return httpLib.NewResponse(http.StatusNoContent, resp, nil) //Почему в тз написано возвращаем 204?
 	}
@@ -189,10 +196,9 @@ func (factory *TodoHttp) FindTodo(idParameter string) httpLib.Endpoint {
 
 func (factory *TodoHttp) FindTodos() httpLib.Endpoint {
 	return func(w http.ResponseWriter, r *http.Request) httpLib.Response {
-
 		var pointers TodoPointers
 		if r.URL.Query().Has("status") {
-			status := r.URL.Query().Get("status")
+			status := strings.ToUpper(r.URL.Query().Get("status"))
 			pointers.Status = &status
 		} else {
 			statusActive := StatusActive

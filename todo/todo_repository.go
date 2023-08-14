@@ -44,6 +44,9 @@ func (repository *todoRepo) Create(todo *Todo) (*Todo, error) {
 	todo.CreatedAt = time.Now().UTC()
 	result, err := repository.collection.InsertOne(context.TODO(), todo)
 	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			return nil, ErrTodoAlreadyExists
+		}
 		return nil, err
 	}
 	todo.ID = result.InsertedID.(primitive.ObjectID)
@@ -130,7 +133,10 @@ func (repository *todoRepo) Update(upd TodoPointers) error {
 	result := repository.collection.FindOneAndUpdate(context.TODO(), filter, update)
 	if result.Err() != nil {
 		if result.Err() == mongo.ErrNoDocuments {
-			return ErrNothingToUpdate
+			return ErrTodoNotFound
+		}
+		if mongo.IsDuplicateKeyError(result.Err()) {
+			return ErrTodoAlreadyExists
 		}
 		return result.Err()
 	}
