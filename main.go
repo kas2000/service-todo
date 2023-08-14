@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
+	command "github.com/kas2000/commandlib"
 	httpLib "github.com/kas2000/http"
 	"github.com/kas2000/logger"
+	"github.com/kas2000/service-todo/todo"
 	"github.com/urfave/cli/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,10 +18,11 @@ import (
 )
 
 var (
-	port   = ""
-	dbUri  = ""
-	dbName = ""
-	env    = ""
+	port      = ""
+	dbUri     = ""
+	dbName    = ""
+	env       = ""
+	urlPrefix = ""
 
 	flags = []cli.Flag{
 		&cli.StringFlag{
@@ -49,6 +53,8 @@ func parseEnv() error {
 		return errors.New("invalid db name")
 	}
 
+	urlPrefix = os.Getenv("URL_PREFIX")
+
 	return nil
 }
 
@@ -68,6 +74,7 @@ func main() {
 
 func run(*cli.Context) error {
 	log, _ := logger.New("debug")
+	validate := validator.New()
 
 	if err := parseEnv(); err != nil {
 		log.Fatal("Error parsing .env file: " + err.Error())
@@ -103,6 +110,16 @@ func run(*cli.Context) error {
 	if err != nil {
 		log.Fatal("couldn't instantiate server: " + err.Error())
 	}
+
+	todoRepo, err := todo.NewTodoRepo(collectionsNames, mongoDB)
+	if err != nil {
+		log.Fatal("couldn't initialize maintenance repository: " + err.Error())
+	}
+	service := todo.NewService(todoRepo, log)
+	todoCh := command.NewCommandHandler(service)
+	todoHttp := todo.NewTodoHttp(log, todoCh, validate, "todo-service")
+	todoController := todo.NewTodoController(&server, todoHttp, urlPrefix)
+	todoController.Bind()
 
 	server.ListenAndServe()
 	return nil

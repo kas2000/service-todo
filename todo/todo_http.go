@@ -87,7 +87,7 @@ func (factory *TodoHttp) UpdateTodo(idParameter string) httpLib.Endpoint {
 			return httpLib.BadRequest(180, err.Error(), factory.systemName)
 		}
 
-		cmd := UpdateTodoCommand {
+		cmd := UpdateTodoCommand{
 			UpdateTodoDTO: upd,
 		}
 		resp, err := factory.ch.ExecuteCommand(&cmd)
@@ -99,7 +99,37 @@ func (factory *TodoHttp) UpdateTodo(idParameter string) httpLib.Endpoint {
 			return httpLib.InternalServer(200, err.Error(), factory.systemName)
 		}
 		return httpLib.NewResponse(http.StatusNoContent, resp, nil) //Почему в тз написано возвращаем 204?
-		//return httpLib.NewResponse(http.StatusOK, resp, nil) Разве не 200 должна быть?
+	}
+}
+
+func (factory *TodoHttp) SetTodoStatusDone(idParameter string) httpLib.Endpoint {
+	return func(w http.ResponseWriter, r *http.Request) httpLib.Response {
+		vars := mux.Vars(r)
+		id, found := vars[idParameter]
+		if !found {
+			return httpLib.BadRequest(140, "no subject id.", factory.systemName)
+		}
+		objID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return httpLib.BadRequest(150, err.Error(), factory.systemName)
+		}
+
+		status := StatusDone
+		cmd := UpdateTodoStatusCommand{
+			TodoPointers: TodoPointers{
+				ID:     &objID,
+				Status: &status,
+			},
+		}
+		resp, err := factory.ch.ExecuteCommand(&cmd)
+		if err != nil {
+			switch err {
+			case ErrTodoNotFound:
+				return httpLib.NotFound(190, err.Error(), factory.systemName)
+			}
+			return httpLib.InternalServer(200, err.Error(), factory.systemName)
+		}
+		return httpLib.NewResponse(http.StatusNoContent, resp, nil) //Почему в тз написано возвращаем 204?
 	}
 }
 
