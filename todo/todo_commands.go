@@ -35,7 +35,7 @@ func (cmd *DeleteTodoCommand) Execute(svc interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return cmd, nil
+	return nil, nil
 }
 
 type UpdateTodoStatusCommand struct {

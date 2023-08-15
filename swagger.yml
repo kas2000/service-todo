@@ -1,0 +1,111 @@
+basePath: /api
+consumes:
+    - application/json
+info:
+    description: Documentation for my go project
+    title: Region Todo Service
+    version: 1.0.0
+paths:
+    /todo-list/tasks:
+        post:
+            description: Creates Todo
+            operationId: CreateTodo
+            parameters:
+                - in: body
+                  name: body
+                  description: Todo
+                  schema:
+                      type: object
+                      required:
+                          - title
+                          - activeAt
+                      default:
+                          title: Купить книгу - Высоконагруженные приложения
+                          activeAt: 2023-08-05
+                      properties:
+                          title:
+                              type: string
+                              description: "Should be <= 200"
+                          activeAt:
+                              type: string
+                              description: "Format: YYYY-MM-DD"
+            produces:
+                - application/json
+            responses:
+                "204":
+                    $ref: '#/responses/Todo'
+                "404":
+                    $ref: '#/responses/DefaultError'
+            tags:
+                - todos
+    /todo-list/tasks/{id}:
+        put:
+            description: Updates Todo by ID
+            operationId: UpdateTodo
+            parameters:
+                - in: path
+                  name: id
+                  schema:
+                    type: string
+                  required: true
+                  description: object_id of the todo to get
+                - in: body
+                  name: body
+                  description: Todo
+                  schema:
+                      type: object
+                      required:
+                          - title
+                          - activeAt
+                      default:
+                          title: Купить книгу - Высоконагруженные приложения
+                          activeAt: 2023-08-05
+                      properties:
+                          title:
+                              type: string
+                              description: "Should be <= 200"
+                          activeAt:
+                              type: string
+                              description: "Format: YYYY-MM-DD"
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: OK
+                "404":
+                    $ref: '#/responses/DefaultError'
+            tags:
+                - todos
+produces:
+    - application/json
+responses:
+    Todo:
+        description: ""
+        schema:
+            type: object
+            properties:
+                title:
+                    type: string
+                activeAt:
+                    type: string
+    DefaultError:
+        description: ""
+        schema:
+            type: object
+            properties:
+                status:
+                    type: integer
+                    description: http status code
+                message:
+                    type: string
+                    description: message from server
+                code:
+                    type: string
+                    description: stack trace
+                system:
+                    type: string
+                    description: service name
+
+schemes:
+    - http
+swagger: "2.0"

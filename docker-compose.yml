@@ -1,0 +1,19 @@
+volumes:
+  mongo:
+
+services:
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    expose:
+      - 27017
+    volumes:
+      - mongo:/data/db
+
+  project:
+    container_name: todo-app
+    build: .
+    ports:
+      - 8080
+    depends_on:
+      - mongodb

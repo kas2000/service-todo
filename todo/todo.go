@@ -1,10 +1,10 @@
 package todo
 
 import (
-	"errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 	"time"
+	"errors"
 )
 
 type Todo struct {
