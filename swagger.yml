@@ -33,7 +33,29 @@ paths:
                 - application/json
             responses:
                 "204":
-                    $ref: '#/responses/Todo'
+                    description: list of todos
+                    schema:
+                        type: array
+                        $ref: '#/responses/Todo'
+                "404":
+                    $ref: '#/responses/DefaultError'
+            tags:
+                - todos
+        get:
+            description: Finds Todos
+            operationId: FindTodos
+            parameters:
+                - in: query
+                  name: status
+                  description: status of the todo. Might be active/done
+                  schema:
+                      type: string
+                      default: active
+            produces:
+                - application/json
+            responses:
+                "204":
+                    $ref: '#/responses/TodoList'
                 "404":
                     $ref: '#/responses/DefaultError'
             tags:
@@ -76,9 +98,59 @@ paths:
                     $ref: '#/responses/DefaultError'
             tags:
                 - todos
+        delete:
+            description: Deletes Todo by ID
+            operationId: DeleteTodo
+            parameters:
+                - in: path
+                  name: id
+                  schema:
+                      type: string
+                  required: true
+                  description: object_id of the todo to get
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: OK
+                "404":
+                    $ref: '#/responses/DefaultError'
+            tags:
+                - todos
+    /todo-list/tasks/{id}/done:
+        put:
+            description: Sets Todo's status to done
+            operationId: SetTodoStatusDone
+            parameters:
+                - in: path
+                  name: id
+                  schema:
+                      type: string
+                  required: true
+                  description: object_id of the todo to get
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: OK
+                "404":
+                    $ref: '#/responses/DefaultError'
+            tags:
+                - todos
 produces:
     - application/json
 responses:
+    TodoList:
+        description: ""
+        schema:
+            type: array
+            items:
+                type: object
+                properties:
+                    title:
+                        type: string
+                    activeAt:
+                        type: string
     Todo:
         description: ""
         schema:
